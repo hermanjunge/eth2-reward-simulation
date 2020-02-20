@@ -6,8 +6,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-use super::config;
-use super::validator::Validator;
+use super::*;
+use integer_sqrt::IntegerSquareRoot;
 
 pub struct State {
     // we keep the config at hand
@@ -93,11 +93,64 @@ impl State {
     }
 }
 
-// TODO: Test
-// - State::new()
-// - State::get_total_active_balance()
-// - State::get_total_active_balance()
-// - State::get_total_active_validators()
-// - State::get_matching_balance()
-// - State::get_max_balance()
-// - State::get_min_balance()
+pub struct StateTotals {
+    pub staked_balance: u64,
+    pub active_balance: u64,
+    pub sqrt_active_balance: u64,
+    pub matching_balance: u64,
+    pub max_balance: u64,
+    pub min_balance: u64,
+    pub active_validators: u64,
+}
+
+impl StateTotals {
+    pub fn new(state: &State) -> StateTotals {
+        let total_active_balance = state.get_total_active_balance();
+
+        StateTotals {
+            staked_balance: state.get_total_staked_balance(),
+            active_balance: state.get_total_active_balance(),
+            sqrt_active_balance: total_active_balance.integer_sqrt(),
+            active_validators: state.get_total_active_validators(),
+            matching_balance: state.get_matching_balance(),
+            max_balance: state.get_max_balance(),
+            min_balance: state.get_min_balance(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn get_dummy_validator(balance: u64) -> Validator {
+        Validator {
+            balance: balance,
+            effective_balance: 32_000_000_000,
+            is_active: true,
+            is_slashed: false,
+        }
+    }
+
+    #[test]
+    fn new_state() {}
+
+    #[test]
+    fn new_state_totals() {
+        let mut state = State::new();
+        state.validators = vec![];
+        state.validators.push(get_dummy_validator(1));
+        state.validators.push(get_dummy_validator(2));
+        state.validators.push(get_dummy_validator(3));
+        state.validators.push(get_dummy_validator(4));
+        state.validators.push(get_dummy_validator(5));
+
+        let totals = StateTotals::new(&state);
+
+        assert_eq!(totals.staked_balance, 15);
+        //
+        //
+        //
+        // Debo todos los valores internos
+    }
+}
