@@ -4,7 +4,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-use super::config;
+use super::*;
+use rand::prelude::*;
 use std::cmp;
 
 pub struct Validator {
@@ -13,8 +14,8 @@ pub struct Validator {
     pub is_active: bool,
     pub is_slashed: bool,
     pub has_matched_source: bool,
-    pub has_matched_head: bool,
     pub has_matched_target: bool,
+    pub has_matched_head: bool,
     pub was_proposer: bool,
 }
 
@@ -23,6 +24,23 @@ impl Validator {
         self.effective_balance * config::BASE_REWARD_FACTOR
             / sqrt_total_active_balance
             / config::BASE_REWARDS_PER_EPOCH
+    }
+
+    pub fn update_previous_epoch_activity(&self, config: &Config) -> Validator {
+        let mut rng = thread_rng();
+        let has_been_online = config.probability_online > rng.gen();
+        let has_been_honest = config.probability_honest > rng.gen();
+
+        Validator {
+            balance: self.balance,
+            effective_balance: self.effective_balance,
+            is_active: self.is_active,
+            is_slashed: self.is_slashed,
+            has_matched_source: !self.is_slashed || has_been_online || has_been_honest,
+            has_matched_target: !self.is_slashed || has_been_online || has_been_honest,
+            has_matched_head: !self.is_slashed || has_been_online || has_been_honest,
+            was_proposer: false,
+        }
     }
 
     pub fn update_effective_balance(&mut self) {

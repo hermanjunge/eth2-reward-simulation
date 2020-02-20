@@ -15,19 +15,13 @@ pub fn get_attestation_deltas(
     proposer_indices: &Vec<usize>,
     deltas: &mut Deltas,
 ) {
-    // load our random component
-    let mut dice = Dice::new();
-
     // eligibility check
     if !validator.is_active {
         return;
     }
 
-    // head and FFG incentives (and penalties)
-    if validator.is_slashed
-        || !dice.throw_dice(state.config.probability_online)
-        || !dice.throw_dice(state.config.probability_honest)
-    {
+    // FFG rewards and penalties
+    if !validator.has_matched_source {
         deltas.head_ffg_penalty = 3 * base_reward;
     } else {
         // HACK: avoid integer overflows by "shaving" both balances
@@ -65,7 +59,6 @@ mod tests {
         let mut state = State::new();
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
-        let mut dice = Dice::new();
 
         // our validator was not active last epoch
         state.validators[0].is_active = false;
@@ -76,7 +69,7 @@ mod tests {
             state.validators[0].get_base_reward(state_totals.sqrt_active_balance),
             &state,
             &state_totals,
-            &dice.pick_epoch_proposers(&state),
+            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 
@@ -91,7 +84,6 @@ mod tests {
         let mut state = State::new();
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
-        let mut dice = Dice::new();
 
         // our validator has the slashed status
         state.validators[0].is_slashed = true;
@@ -103,7 +95,7 @@ mod tests {
             base_reward,
             &state,
             &state_totals,
-            &dice.pick_epoch_proposers(&state),
+            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 
@@ -119,12 +111,10 @@ mod tests {
         let mut state = State::new();
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
-        let mut dice = Dice::new();
 
-        state.validators[0].is_active = true;
-        state.validators[0].is_slashed = false;
         state.config.probability_online = 1.0;
-        state.config.probability_honest = 1.0;
+        state.validators[0].is_active = true;
+        state.validators[0].has_matched_source = true;
         let base_reward = state.validators[0].get_base_reward(state_totals.sqrt_active_balance);
 
         get_attestation_deltas(
@@ -133,7 +123,7 @@ mod tests {
             base_reward,
             &state,
             &state_totals,
-            &dice.pick_epoch_proposers(&state),
+            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 
@@ -147,13 +137,12 @@ mod tests {
         let mut state = State::new();
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
-        let mut dice = Dice::new();
 
-        let mut proposer_indices = dice.pick_epoch_proposers(&state);
+        let mut proposer_indices = state.pick_epoch_proposers();
         proposer_indices.sort();
         proposer_indices[0] = 0;
         state.config.probability_online = 1.0;
-        state.config.probability_honest = 1.0;
+        state.validators[0].has_matched_source = true;
         let base_reward = state.validators[0].get_base_reward(state_totals.sqrt_active_balance);
 
         get_attestation_deltas(
@@ -174,9 +163,8 @@ mod tests {
         let mut state = State::new();
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
-        let mut dice = Dice::new();
 
-        let mut proposer_indices = dice.pick_epoch_proposers(&state);
+        let mut proposer_indices = state.pick_epoch_proposers();
         // modify so as NOT to be one of the proposers
         proposer_indices.sort();
         if proposer_indices[0] == 0 {
@@ -204,11 +192,10 @@ mod tests {
         let mut state = State::new();
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
-        let mut dice = Dice::new();
 
         state.config.probability_online = 1.0;
-        state.config.probability_honest = 1.0;
         state.config.exp_value_inclusion_prob = 1.0;
+        state.validators[0].has_matched_source = true;
         let base_reward = state.validators[0].get_base_reward(state_totals.sqrt_active_balance);
 
         get_attestation_deltas(
@@ -217,7 +204,7 @@ mod tests {
             base_reward,
             &state,
             &state_totals,
-            &dice.pick_epoch_proposers(&state),
+            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 

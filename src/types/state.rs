@@ -8,6 +8,7 @@
 
 use super::*;
 use integer_sqrt::IntegerSquareRoot;
+use rand::prelude::*;
 
 pub struct State {
     pub config: config::Config,
@@ -92,6 +93,48 @@ impl State {
             .map(|v: &Validator| v.balance)
             .fold(std::u64::MAX, std::cmp::min)
     }
+
+    pub fn pick_epoch_proposers(&self) -> Vec<usize> {
+        let mut rng = thread_rng();
+
+        let mut proposer_indices = vec![];
+
+        let n = self.validators.len();
+        let proposers_per_epoch = 32;
+        let max_effective_balance = 32_000_000_000;
+        let max_random_byte = 255;
+
+        if self.get_total_active_validators() < 32 {
+            panic!("not enough active validators");
+        }
+
+        loop {
+            if proposer_indices.len() == proposers_per_epoch {
+                break;
+            }
+
+            let candidate_index = rng.gen_range(0, n);
+
+            if self.validators[candidate_index].is_slashed
+                || !self.validators[candidate_index].is_active
+                || proposer_indices.contains(&candidate_index)
+            {
+                continue;
+            }
+
+            // effective balance bias on proposer election
+            let random_byte = rng.gen_range(0, 255);
+            if self.validators[candidate_index].effective_balance * max_random_byte
+                >= random_byte * max_effective_balance
+            {
+                proposer_indices.push(candidate_index);
+            } else {
+                continue;
+            }
+        }
+
+        proposer_indices
+    }
 }
 
 pub struct StateTotals {
@@ -119,6 +162,9 @@ impl StateTotals {
         }
     }
 }
+
+// TODO: Test
+// - self::pick_epoch_proposers()
 
 #[cfg(test)]
 mod tests {
