@@ -138,7 +138,15 @@ mod tests {
     }
 
     #[test]
-    fn new_state() {}
+    fn new_state() {
+        let state = State::new();
+
+        assert_eq!(state.config.total_at_stake_initial, 500000000000000);
+        assert_eq!(state.validators.len(), 15625);
+        assert_eq!(state.get_total_active_balance(), 500000000000000);
+        assert_eq!(state.get_max_balance(), 32000000000);
+        assert_eq!(state.get_min_balance(), 32000000000);
+    }
 
     #[test]
     fn new_state_totals() {
