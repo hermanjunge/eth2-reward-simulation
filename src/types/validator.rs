@@ -12,6 +12,10 @@ pub struct Validator {
     pub effective_balance: u64,
     pub is_active: bool,
     pub is_slashed: bool,
+    pub has_matched_source: bool,
+    pub has_matched_head: bool,
+    pub has_matched_target: bool,
+    pub was_proposer: bool,
 }
 
 impl Validator {
@@ -46,6 +50,10 @@ mod tests {
             effective_balance: 32_000_000_000,
             is_active: true,
             is_slashed: false,
+            has_matched_source: false,
+            has_matched_head: false,
+            has_matched_target: false,
+            was_proposer: false,
         };
 
         // we pick sqrt of 500,000 ETH
@@ -74,6 +82,10 @@ mod tests {
                 effective_balance: eth_to_gwei(effective_balance),
                 is_active: true,
                 is_slashed: false,
+                has_matched_source: false,
+                has_matched_head: false,
+                has_matched_target: false,
+                was_proposer: false,
             },
             expected_result: eth_to_gwei(expected_result),
         }

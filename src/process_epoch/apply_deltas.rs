@@ -14,6 +14,10 @@ pub fn apply_deltas(old_validator: &Validator, deltas: &Deltas) -> Validator {
         effective_balance: old_validator.effective_balance,
         is_active: old_validator.is_active,
         is_slashed: old_validator.is_slashed,
+        has_matched_source: old_validator.has_matched_source,
+        has_matched_head: old_validator.has_matched_head,
+        has_matched_target: old_validator.has_matched_target,
+        was_proposer: old_validator.was_proposer,
     }
 }
 

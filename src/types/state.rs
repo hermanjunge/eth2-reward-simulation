@@ -25,9 +25,12 @@ impl State {
             validators.push(Validator {
                 balance: config::MAX_EFFECTIVE_BALANCE,
                 effective_balance: config::MAX_EFFECTIVE_BALANCE,
-
                 is_active: true,
                 is_slashed: false,
+                has_matched_source: false,
+                has_matched_head: false,
+                has_matched_target: false,
+                was_proposer: false,
             });
         }
 
@@ -132,6 +135,10 @@ mod tests {
             effective_balance: effective_balance,
             is_active: is_active,
             is_slashed: is_slashed,
+            has_matched_source: false,
+            has_matched_head: false,
+            has_matched_target: false,
+            was_proposer: false,
         }
     }
 
