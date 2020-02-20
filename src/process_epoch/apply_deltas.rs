@@ -17,7 +17,7 @@ pub fn apply_deltas(old_validator: &Validator, deltas: &Deltas) -> Validator {
         has_matched_source: old_validator.has_matched_source,
         has_matched_head: old_validator.has_matched_head,
         has_matched_target: old_validator.has_matched_target,
-        was_proposer: old_validator.was_proposer,
+        is_proposer: old_validator.is_proposer,
     }
 }
 

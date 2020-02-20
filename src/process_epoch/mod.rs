@@ -25,16 +25,18 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
     for (validator_index, pre_state_validator) in pre_state.validators.iter().enumerate() {
         // SPEC: process_rewards_and_penalties.get_attestation_deltas()
         let mut deltas = Deltas::new();
-        let validator = pre_state_validator.update_previous_epoch_activity(&pre_state.config);
+        let validator = pre_state_validator.update_previous_epoch_activity(
+            &pre_state,
+            &proposer_indices,
+            validator_index,
+        );
         let base_reward = validator.get_base_reward(pre_state_totals.sqrt_active_balance);
 
         get_attestation_deltas(
             &validator,
-            &validator_index,
             base_reward,
             &pre_state,
             &pre_state_totals,
-            &proposer_indices,
             &mut deltas,
         );
 
@@ -64,10 +66,3 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
 
     post_state
 }
-
-// TODO
-// Refactor
-// - init of the epoch_report_row should only take a single line
-// - replace epoch_report_row updating with a single function
-// Test
-// - process_epoch()

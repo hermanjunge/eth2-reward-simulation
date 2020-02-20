@@ -31,7 +31,7 @@ impl State {
                 has_matched_source: false,
                 has_matched_head: false,
                 has_matched_target: false,
-                was_proposer: false,
+                is_proposer: false,
             });
         }
 
@@ -184,7 +184,7 @@ mod tests {
             has_matched_source: false,
             has_matched_head: false,
             has_matched_target: false,
-            was_proposer: false,
+            is_proposer: false,
         }
     }
 
