@@ -28,7 +28,7 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
     let total_active_validators = pre_state.get_total_active_validators();
     let matching_balance = pre_state.get_matching_balance();
 
-    // pick the 32 block proposers
+    // pick the 32 block proposers for this epoch
     let mut dice = Dice::new();
     let proposer_indices = dice.pick_epoch_proposers(&pre_state);
 

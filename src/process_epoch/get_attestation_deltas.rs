@@ -34,7 +34,7 @@ pub fn get_attestation_deltas(
     } else {
         // HACK: avoid integer overflows by "shaving" both balances
         // NOTE: this issue has been reported as of 2020.02.10
-        let mb = matching_balance / 1000;
+        let mb = (matching_balance as f32 * config.probability_online).floor() as u64 / 1000;
         let tab = total_active_balance / 1000;
         deltas.head_ffg_reward = 3 * base_reward * mb / tab;
 
@@ -147,7 +147,7 @@ mod tests {
             &mut deltas,
         );
 
-        assert_eq!(3 * base_reward, deltas.head_ffg_reward);
+        assert_eq!(3 * base_reward / 10, deltas.head_ffg_reward / 10);
         assert_eq!(0, deltas.head_ffg_penalty);
     }
 
