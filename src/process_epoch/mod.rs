@@ -14,15 +14,12 @@ use apply_deltas::*;
 use get_attestation_deltas::*;
 
 pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> State {
-    // start to record
     let mut epoch_report_row = EpochReportRow::new();
     epoch_report_row.epoch_id = epoch_id;
     let epoch_processing_start = Instant::now();
 
     let mut post_state_validators = vec![];
     let pre_state_totals = StateTotals::new(&pre_state);
-
-    // pick the 32 block proposers for this epoch
     let mut dice = Dice::new();
     let proposer_indices = dice.pick_epoch_proposers(&pre_state);
 
@@ -47,20 +44,15 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
         // SPEC: process_final_updates update balances with hysteriesis
         new_validator.update_effective_balance();
 
-        // your new validator gets added to the post_state
         post_state_validators.push(new_validator);
-
-        // and we aggregate the rewards and penalties in our records
         epoch_report_row.aggregate(&deltas);
     }
 
-    // build the new state
     let post_state = State {
         config: pre_state.config,
         validators: post_state_validators,
     };
 
-    // record and record
     epoch_report_row.total_staked_balance = post_state.get_total_staked_balance();
     epoch_report_row.total_effective_balance = post_state.get_total_active_balance();
     epoch_report_row.max_balance = post_state.get_max_balance();
