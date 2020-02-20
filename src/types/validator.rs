@@ -30,15 +30,16 @@ impl Validator {
         let mut rng = thread_rng();
         let has_been_online = config.probability_online > rng.gen();
         let has_been_honest = config.probability_honest > rng.gen();
+        let has_matched_source = !self.is_slashed && has_been_online && has_been_honest;
 
         Validator {
             balance: self.balance,
             effective_balance: self.effective_balance,
             is_active: self.is_active,
             is_slashed: self.is_slashed,
-            has_matched_source: !self.is_slashed || has_been_online || has_been_honest,
-            has_matched_target: !self.is_slashed || has_been_online || has_been_honest,
-            has_matched_head: !self.is_slashed || has_been_online || has_been_honest,
+            has_matched_source: has_matched_source,
+            has_matched_target: has_matched_source,
+            has_matched_head: has_matched_source,
             was_proposer: false,
         }
     }
@@ -57,9 +58,39 @@ impl Validator {
     }
 }
 
+// TODO
+// test update_previous_activity()
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn update_previous_activity() {
+        let mut config = Config::new();
+        let mut validator = Validator {
+            balance: 32_000_000_000,
+            effective_balance: 32_000_000_000,
+            is_active: true,
+            is_slashed: false,
+            has_matched_source: false,
+            has_matched_head: false,
+            has_matched_target: false,
+            was_proposer: false,
+        };
+
+        config.probability_online = 1.0;
+        config.probability_honest = 1.0;
+        validator = validator.update_previous_epoch_activity(&config);
+
+        assert_eq!(validator.has_matched_source, true);
+
+        config.probability_online = 0.0;
+        config.probability_honest = 1.0;
+        validator = validator.update_previous_epoch_activity(&config);
+
+        assert_eq!(validator.has_matched_source, false);
+    }
 
     #[test]
     fn get_base_reward() {
