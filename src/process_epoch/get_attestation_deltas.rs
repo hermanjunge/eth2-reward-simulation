@@ -53,11 +53,11 @@ fn assign_ffg_reward(
 ) {
     // HACK: avoid integer overflows by "shaving" both balances
     // NOTE: this issue has been reported as of 2020.02.10
-    let mb =
+    let matching_balance_shaved =
         (matching_balance as f32 * probability_online * probability_honest).floor() as u64 / 1000;
-    let tab = active_balance / 1000;
+    let active_balance_shaved = active_balance / 1000;
 
-    deltas.head_ffg_reward = 3 * base_reward * mb / tab;
+    deltas.head_ffg_reward = 3 * base_reward * matching_balance_shaved / active_balance_shaved;
 }
 
 fn assign_ffg_penalty(deltas: &mut Deltas, base_reward: u64) {
@@ -86,7 +86,6 @@ fn assign_attester_incentive(deltas: &mut Deltas, magic_number: f32, base_reward
     deltas.attester_reward = (maximum_attester_reward as f32 * magic_number).floor() as u64;
 }
 
-/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -97,16 +96,13 @@ mod tests {
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
 
-        // our validator was not active last epoch
         state.validators[0].is_active = false;
 
         get_attestation_deltas(
             &state.validators[0],
-            &(0 as usize),
             state.validators[0].get_base_reward(state_totals.sqrt_active_balance),
             &state,
             &state_totals,
-            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 
@@ -128,11 +124,9 @@ mod tests {
 
         get_attestation_deltas(
             &state.validators[0],
-            &(0 as usize),
             base_reward,
             &state,
             &state_totals,
-            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 
@@ -156,11 +150,9 @@ mod tests {
 
         get_attestation_deltas(
             &state.validators[0],
-            &(0 as usize),
             base_reward,
             &state,
             &state_totals,
-            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 
@@ -175,20 +167,16 @@ mod tests {
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
 
-        let mut proposer_indices = state.pick_epoch_proposers();
-        proposer_indices.sort();
-        proposer_indices[0] = 0;
         state.config.probability_online = 1.0;
         state.validators[0].has_matched_source = true;
+        state.validators[0].is_proposer = true;
         let base_reward = state.validators[0].get_base_reward(state_totals.sqrt_active_balance);
 
         get_attestation_deltas(
             &state.validators[0],
-            &(0 as usize),
             base_reward,
             &state,
             &state_totals,
-            &proposer_indices,
             &mut deltas,
         );
 
@@ -201,23 +189,15 @@ mod tests {
         let state_totals = StateTotals::new(&state);
         let mut deltas = Deltas::new();
 
-        let mut proposer_indices = state.pick_epoch_proposers();
-        // modify so as NOT to be one of the proposers
-        proposer_indices.sort();
-        if proposer_indices[0] == 0 {
-            proposer_indices[0] = 1;
-        }
-        state.config.probability_online = 1.0;
-        state.config.probability_honest = 1.0;
+        state.validators[0].has_matched_source = true;
+        state.validators[0].is_proposer = false;
         let base_reward = state.validators[0].get_base_reward(state_totals.sqrt_active_balance);
 
         get_attestation_deltas(
             &state.validators[0],
-            &(0 as usize),
             base_reward,
             &state,
             &state_totals,
-            &proposer_indices,
             &mut deltas,
         );
 
@@ -237,16 +217,12 @@ mod tests {
 
         get_attestation_deltas(
             &state.validators[0],
-            &(0 as usize),
             base_reward,
             &state,
             &state_totals,
-            &state.pick_epoch_proposers(),
             &mut deltas,
         );
 
         assert_eq!(20_035, deltas.attester_reward);
     }
 }
-
-*/

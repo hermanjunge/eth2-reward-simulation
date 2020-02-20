@@ -63,6 +63,10 @@ impl Validator {
     }
 }
 
+// TODO
+// proposer test in update previous epoch
+// - test for is, and is not proposer
+
 #[cfg(test)]
 mod tests {
     use super::*;
