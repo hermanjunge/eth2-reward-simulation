@@ -58,38 +58,68 @@ impl Validator {
     }
 }
 
-// TODO
-// test update_previous_activity()
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn update_previous_activity() {
+    struct TestCaseUpdatePreviousEpoch {
+        config: Config,
+        validator: Validator,
+        expected_result: bool,
+    }
+
+    // prepare_test_case_update_previous_epoch
+    fn prepare_tcupe(
+        is_slashed: bool,
+        probability_online: f32,
+        probability_honest: f32,
+        expected_result: bool,
+    ) -> TestCaseUpdatePreviousEpoch {
         let mut config = Config::new();
-        let mut validator = Validator {
+        let validator = Validator {
             balance: 32_000_000_000,
             effective_balance: 32_000_000_000,
             is_active: true,
-            is_slashed: false,
+            is_slashed: is_slashed,
             has_matched_source: false,
             has_matched_head: false,
             has_matched_target: false,
             was_proposer: false,
         };
 
-        config.probability_online = 1.0;
-        config.probability_honest = 1.0;
-        validator = validator.update_previous_epoch_activity(&config);
+        config.probability_online = probability_online;
+        config.probability_honest = probability_honest;
 
-        assert_eq!(validator.has_matched_source, true);
+        TestCaseUpdatePreviousEpoch {
+            config: config,
+            validator: validator,
+            expected_result: expected_result,
+        }
+    }
 
-        config.probability_online = 0.0;
-        config.probability_honest = 1.0;
-        validator = validator.update_previous_epoch_activity(&config);
+    #[test]
+    fn update_previous_epoch_activity() {
+        let mut cases = vec![];
 
-        assert_eq!(validator.has_matched_source, false);
+        // is_slashed true should always fail
+        cases.push(prepare_tcupe(true, 1.0, 1.0, false));
+        cases.push(prepare_tcupe(true, 1.0, 0.5, false));
+        cases.push(prepare_tcupe(true, 1.0, 0.0, false));
+        cases.push(prepare_tcupe(true, 0.0, 1.0, false));
+        cases.push(prepare_tcupe(true, 0.0, 0.5, false));
+        cases.push(prepare_tcupe(true, 0.0, 0.0, false));
+
+        // the "always good" case
+        cases.push(prepare_tcupe(false, 1.0, 1.0, true));
+
+        // a 0.0 in one of the probabilities will always fail
+        cases.push(prepare_tcupe(false, 0.0, 1.0, false));
+        cases.push(prepare_tcupe(false, 1.0, 0.0, false));
+
+        for mut case in cases {
+            case.validator = case.validator.update_previous_epoch_activity(&case.config);
+            assert_eq!(case.expected_result, case.validator.has_matched_source);
+        }
     }
 
     #[test]
