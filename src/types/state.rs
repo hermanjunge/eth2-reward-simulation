@@ -123,12 +123,17 @@ impl StateTotals {
 mod tests {
     use super::*;
 
-    fn get_dummy_validator(balance: u64) -> Validator {
+    fn get_dummy_validator(
+        balance: u64,
+        effective_balance: u64,
+        is_active: bool,
+        is_slashed: bool,
+    ) -> Validator {
         Validator {
             balance: balance,
-            effective_balance: 32_000_000_000,
-            is_active: true,
-            is_slashed: false,
+            effective_balance: effective_balance,
+            is_active: is_active,
+            is_slashed: is_slashed,
         }
     }
 
@@ -139,18 +144,27 @@ mod tests {
     fn new_state_totals() {
         let mut state = State::new();
         state.validators = vec![];
-        state.validators.push(get_dummy_validator(1));
-        state.validators.push(get_dummy_validator(2));
-        state.validators.push(get_dummy_validator(3));
-        state.validators.push(get_dummy_validator(4));
-        state.validators.push(get_dummy_validator(5));
+        state
+            .validators
+            .push(get_dummy_validator(100, 16, true, true));
+        state
+            .validators
+            .push(get_dummy_validator(200, 18, true, false));
+        state
+            .validators
+            .push(get_dummy_validator(300, 30, true, false));
+        state
+            .validators
+            .push(get_dummy_validator(400, 40, false, false));
 
         let totals = StateTotals::new(&state);
 
-        assert_eq!(totals.staked_balance, 15);
-        //
-        //
-        //
-        // Debo todos los valores internos
+        assert_eq!(totals.staked_balance, 1000);
+        assert_eq!(totals.active_balance, 64);
+        assert_eq!(totals.sqrt_active_balance, 8);
+        assert_eq!(totals.active_validators, 3);
+        assert_eq!(totals.matching_balance, 48);
+        assert_eq!(totals.max_balance, 400);
+        assert_eq!(totals.min_balance, 100);
     }
 }

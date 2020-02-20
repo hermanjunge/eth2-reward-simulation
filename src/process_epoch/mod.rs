@@ -27,6 +27,7 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
         // SPEC: process_rewards_and_penalties.get_attestation_deltas()
         let mut deltas = Deltas::new();
         let base_reward = validator.get_base_reward(pre_state_totals.sqrt_active_balance);
+        // <- Get validator activity from previous epoch
 
         get_attestation_deltas(
             &validator,
