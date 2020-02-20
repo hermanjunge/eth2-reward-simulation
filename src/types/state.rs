@@ -10,9 +10,7 @@ use super::*;
 use integer_sqrt::IntegerSquareRoot;
 
 pub struct State {
-    // we keep the config at hand
     pub config: config::Config,
-
     pub validators: Vec<Validator>,
 }
 
