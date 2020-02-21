@@ -4,6 +4,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 use super::*;
+use integer_sqrt::IntegerSquareRoot;
 use std::time::Instant;
 
 const MONTHS_PER_YEAR: i32 = 12;
@@ -162,13 +163,21 @@ impl EpochReportRow {
         self.deltas_attester_rewards += deltas.attester_reward;
     }
 
-    pub fn close(&mut self, state: &State) {
-        self.total_staked_balance = state.get_total_staked_balance();
-        self.total_effective_balance = state.get_total_active_balance();
-        self.max_balance = state.get_max_balance();
-        self.min_balance = state.get_min_balance();
+    pub fn close(&mut self, state: &State, state_totals: &mut StateTotals) {
+        state_totals.staked_balance = state.get_total_staked_balance();
+        state_totals.active_balance = state.get_total_active_balance();
+        state_totals.sqrt_active_balance = state_totals.active_balance.integer_sqrt();
+        state_totals.active_validators = state.get_total_active_validators();
+        state_totals.matching_balance = state.get_matching_balance();
+        state_totals.max_balance = state.get_max_balance();
+        state_totals.min_balance = state.get_min_balance();
+
+        self.total_staked_balance = state_totals.staked_balance;
+        self.total_effective_balance = state_totals.active_balance;
+        self.max_balance = state_totals.max_balance;
+        self.min_balance = state_totals.min_balance;
         self.total_validators = state.validators.len() as u64;
-        self.total_active_validators = state.get_total_active_validators();
+        self.total_active_validators = state_totals.active_validators;
         self.time_elapsed = self.time_started.elapsed().as_micros();
     }
 }

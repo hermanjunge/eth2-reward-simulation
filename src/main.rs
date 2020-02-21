@@ -12,10 +12,11 @@ use types::*;
 
 fn main() {
     let mut state = State::new();
+    let mut state_totals = StateTotals::new(&state);
     let mut output = Output::new();
 
     for i in 0..state.config.epochs {
-        state = process_epoch(state, i, &mut output);
+        state = process_epoch(state, &mut state_totals, i, &mut output);
     }
 
     if state.config.printing_output == "monthly" {

@@ -11,11 +11,15 @@ use crate::types::*;
 use apply_deltas::*;
 use get_attestation_deltas::*;
 
-pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> State {
+pub fn process_epoch(
+    pre_state: State,
+    state_totals: &mut StateTotals,
+    epoch_id: i32,
+    output: &mut Output,
+) -> State {
     let mut epoch_report_row = EpochReportRow::open(epoch_id);
 
     let mut post_state_validators = vec![];
-    let pre_state_totals = StateTotals::new(&pre_state);
     let proposer_bitmap = pre_state.pick_epoch_proposers();
 
     for (validator_index, pre_state_validator) in pre_state.validators.iter().enumerate() {
@@ -26,13 +30,13 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
             &proposer_bitmap,
             validator_index,
         );
-        let base_reward = validator.get_base_reward(pre_state_totals.sqrt_active_balance);
+        let base_reward = validator.get_base_reward(state_totals.sqrt_active_balance);
 
         get_attestation_deltas(
             &validator,
             base_reward,
             &pre_state,
-            &pre_state_totals,
+            &state_totals,
             &mut deltas,
         );
 
@@ -51,7 +55,7 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
         validators: post_state_validators,
     };
 
-    epoch_report_row.close(&post_state);
+    epoch_report_row.close(&post_state, state_totals);
     output.push(epoch_report_row);
 
     post_state
