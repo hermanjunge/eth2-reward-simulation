@@ -3,8 +3,8 @@
 // Output stores the outcomes from the simulation of an epoch
 //
 ////////////////////////////////////////////////////////////////////////////////
-use super::config::*;
-use super::deltas::Deltas;
+use super::*;
+use std::time::Instant;
 
 const MONTHS_PER_YEAR: i32 = 12;
 
@@ -114,7 +114,6 @@ pub struct MonthlyReportRow {
     pub network_percentage_net_rewards: f64,
 }
 
-#[derive(Copy, Clone, Debug)]
 pub struct EpochReportRow {
     pub epoch_id: i32,
 
@@ -130,13 +129,14 @@ pub struct EpochReportRow {
     pub total_validators: u64,
     pub total_active_validators: u64,
 
+    pub time_started: Instant,
     pub time_elapsed: u128,
 }
 
 impl EpochReportRow {
-    pub fn new() -> EpochReportRow {
+    pub fn open(id: i32) -> EpochReportRow {
         EpochReportRow {
-            epoch_id: 0,
+            epoch_id: id,
 
             deltas_head_ffg_rewards: 0,
             deltas_head_ffg_penalties: 0,
@@ -150,6 +150,7 @@ impl EpochReportRow {
             total_validators: 0,
             total_active_validators: 0,
 
+            time_started: Instant::now(),
             time_elapsed: 0,
         }
     }
@@ -160,6 +161,16 @@ impl EpochReportRow {
         self.deltas_proposer_rewards += deltas.proposer_reward;
         self.deltas_attester_rewards += deltas.attester_reward;
     }
+
+    pub fn close(&mut self, state: &State) {
+        self.total_staked_balance = state.get_total_staked_balance();
+        self.total_effective_balance = state.get_total_active_balance();
+        self.max_balance = state.get_max_balance();
+        self.min_balance = state.get_min_balance();
+        self.total_validators = state.validators.len() as u64;
+        self.total_active_validators = state.get_total_active_validators();
+        self.time_elapsed = self.time_started.elapsed().as_micros();
+    }
 }
 
 // TODO: Tests
@@ -167,5 +178,6 @@ impl EpochReportRow {
 // - Output::push()
 // - Output::print_epoch_report()
 // - Output::print_monthly_report()
-// - EpochReportRow::new()
+// - EpochReportRow::open()
 // - EpochReportRow::aggregate()
+// - EpochReportRow::close()

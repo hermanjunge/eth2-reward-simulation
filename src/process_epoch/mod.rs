@@ -7,16 +7,12 @@
 mod apply_deltas;
 mod get_attestation_deltas;
 
-use std::time::Instant;
-
 use crate::types::*;
 use apply_deltas::*;
 use get_attestation_deltas::*;
 
 pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> State {
-    let mut epoch_report_row = EpochReportRow::new();
-    epoch_report_row.epoch_id = epoch_id;
-    let epoch_processing_start = Instant::now();
+    let mut epoch_report_row = EpochReportRow::open(epoch_id);
 
     let mut post_state_validators = vec![];
     let pre_state_totals = StateTotals::new(&pre_state);
@@ -55,13 +51,7 @@ pub fn process_epoch(pre_state: State, epoch_id: i32, output: &mut Output) -> St
         validators: post_state_validators,
     };
 
-    epoch_report_row.total_staked_balance = post_state.get_total_staked_balance();
-    epoch_report_row.total_effective_balance = post_state.get_total_active_balance();
-    epoch_report_row.max_balance = post_state.get_max_balance();
-    epoch_report_row.min_balance = post_state.get_min_balance();
-    epoch_report_row.total_validators = post_state.validators.len() as u64;
-    epoch_report_row.total_active_validators = post_state.get_total_active_validators();
-    epoch_report_row.time_elapsed = epoch_processing_start.elapsed().as_micros();
+    epoch_report_row.close(&post_state);
     output.push(epoch_report_row);
 
     post_state

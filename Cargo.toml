@@ -10,3 +10,6 @@ edition = "2018"
 integer-sqrt = "0.1.2"
 rand = "0.6.0"
 clap = "2.33.0"
+
+[profile.release]
+debug = true
