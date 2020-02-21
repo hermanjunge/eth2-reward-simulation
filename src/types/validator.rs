@@ -8,6 +8,7 @@ use super::*;
 use rand::prelude::*;
 use std::cmp;
 
+#[derive(Debug)]
 pub struct Validator {
     pub balance: u64,
     pub effective_balance: u64,
@@ -62,10 +63,6 @@ impl Validator {
         }
     }
 }
-
-// TODO
-// proposer test in update previous epoch
-// - test for is, and is not proposer
 
 #[cfg(test)]
 mod tests {
@@ -131,6 +128,64 @@ mod tests {
                 case.validator
                     .update_previous_epoch_activity(&case.state, &dummy_vec, 0);
             assert_eq!(case.expected_result, case.validator.has_matched_source);
+        }
+    }
+
+    struct TestCaseProposer {
+        state: State,
+        validator: Validator,
+        proposer_indices: Vec<usize>,
+        validator_index: usize,
+        expected_result: bool,
+    }
+
+    fn prepare_test_proposer(validator_index: usize, expected_result: bool) -> TestCaseProposer {
+        let state = State::new();
+        let validator = Validator {
+            balance: 32_000_000_000,
+            effective_balance: 32_000_000_000,
+            is_active: true,
+            is_slashed: false,
+            has_matched_source: false,
+            has_matched_head: false,
+            has_matched_target: false,
+            is_proposer: false,
+        };
+
+        let mut proposer_indices = vec![];
+        proposer_indices.push(4usize);
+        proposer_indices.push(8usize);
+        proposer_indices.push(15usize);
+        proposer_indices.push(16usize);
+        proposer_indices.push(23usize);
+        proposer_indices.push(42usize);
+
+        TestCaseProposer {
+            state: state,
+            validator: validator,
+            proposer_indices: proposer_indices,
+            validator_index: validator_index,
+            expected_result: expected_result,
+        }
+    }
+
+    #[test]
+    fn update_previous_epoch_activity_proposer() {
+        let mut cases = vec![];
+
+        cases.push(prepare_test_proposer(0, false));
+        cases.push(prepare_test_proposer(8, true));
+        cases.push(prepare_test_proposer(19, false));
+        cases.push(prepare_test_proposer(42, true));
+
+        for mut case in cases {
+            case.validator = case.validator.update_previous_epoch_activity(
+                &case.state,
+                &case.proposer_indices,
+                case.validator_index,
+            );
+
+            assert_eq!(case.expected_result, case.validator.is_proposer);
         }
     }
 
