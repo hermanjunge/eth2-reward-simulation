@@ -25,7 +25,6 @@ pub fn get_attestation_deltas(
             state_totals.matching_balance,
             state_totals.active_balance,
             state.config.probability_online,
-            state.config.probability_honest,
             base_reward,
         );
 
@@ -34,7 +33,6 @@ pub fn get_attestation_deltas(
                 deltas,
                 state_totals.active_validators,
                 state.config.probability_online,
-                state.config.probability_honest,
                 base_reward,
             );
         }
@@ -48,13 +46,12 @@ fn assign_ffg_reward(
     matching_balance: u64,
     active_balance: u64,
     probability_online: f32,
-    probability_honest: f32,
     base_reward: u64,
 ) {
     // HACK: avoid integer overflows by "shaving" both balances
     // NOTE: this issue has been reported as of 2020.02.10
     let matching_balance_shaved =
-        (matching_balance as f32 * probability_online * probability_honest).floor() as u64 / 1000;
+        (matching_balance as f32 * probability_online).floor() as u64 / 1000;
     let active_balance_shaved = active_balance / 1000;
 
     deltas.head_ffg_reward = 3 * base_reward * matching_balance_shaved / active_balance_shaved;
@@ -68,13 +65,11 @@ fn assign_proposer_incentive(
     deltas: &mut Deltas,
     active_validators: u64,
     probability_online: f32,
-    probability_honest: f32,
     base_reward: u64,
 ) {
     let proposer_reward_amount = base_reward / config::PROPOSER_REWARD_QUOTIENT;
     let number_of_attesters = active_validators / 32;
-    let number_of_attestations =
-        (number_of_attesters as f32 * probability_online * probability_honest).floor() as u64;
+    let number_of_attestations = (number_of_attesters as f32 * probability_online).floor() as u64;
 
     deltas.proposer_reward = proposer_reward_amount * number_of_attestations;
 }
