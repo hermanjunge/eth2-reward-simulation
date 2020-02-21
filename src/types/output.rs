@@ -169,6 +169,9 @@ impl EpochReportRow {
         state_totals.sqrt_active_balance = state_totals.active_balance.integer_sqrt();
         state_totals.active_validators = state.get_total_active_validators();
         state_totals.matching_balance = state.get_matching_balance();
+        state_totals.adjusted_matching_balance =
+            (state_totals.matching_balance as f32 * state.config.probability_online).floor() as u64
+                / 1000;
         state_totals.max_balance = state.get_max_balance();
         state_totals.min_balance = state.get_min_balance();
 

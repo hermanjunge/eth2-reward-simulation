@@ -147,6 +147,7 @@ pub struct StateTotals {
     pub active_balance: u64,
     pub sqrt_active_balance: u64,
     pub matching_balance: u64,
+    pub adjusted_matching_balance: u64,
     pub max_balance: u64,
     pub min_balance: u64,
     pub active_validators: u64,
@@ -155,17 +156,23 @@ pub struct StateTotals {
 impl StateTotals {
     pub fn new(state: &State) -> StateTotals {
         let total_active_balance = state.get_total_active_balance();
+        let matching_balance = state.get_matching_balance();
 
         StateTotals {
             staked_balance: state.get_total_staked_balance(),
-            active_balance: state.get_total_active_balance(),
+            active_balance: total_active_balance,
             sqrt_active_balance: total_active_balance.integer_sqrt(),
             active_validators: state.get_total_active_validators(),
-            matching_balance: state.get_matching_balance(),
+            matching_balance: matching_balance,
+            adjusted_matching_balance: (matching_balance as f32 * state.config.probability_online)
+                .floor() as u64
+                / 1000,
             max_balance: state.get_max_balance(),
             min_balance: state.get_min_balance(),
         }
     }
+
+    //pub fill_totals_from_state
 }
 
 // TODO: Test
