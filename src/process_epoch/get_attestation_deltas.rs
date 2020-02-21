@@ -22,9 +22,8 @@ pub fn get_attestation_deltas(
     } else {
         assign_ffg_reward(
             deltas,
-            state_totals.matching_balance,
+            state_totals.adjusted_matching_balance,
             state_totals.active_balance,
-            state.config.probability_online,
             base_reward,
         );
 
@@ -43,17 +42,16 @@ pub fn get_attestation_deltas(
 
 fn assign_ffg_reward(
     deltas: &mut Deltas,
-    matching_balance: u64,
+    adjusted_matching_balance: u64,
     active_balance: u64,
-    probability_online: f32,
     base_reward: u64,
 ) {
     // HACK: avoid integer overflows by "shaving" both balances
     // NOTE: this issue has been reported as of 2020.02.10
-    let matching_balance = (matching_balance as f32 * probability_online).floor() as u64 / 1000;
+    let adjusted_matching_balance = adjusted_matching_balance / 1000;
     let active_balance = active_balance / 1000;
 
-    deltas.head_ffg_reward = 3 * base_reward * matching_balance / active_balance;
+    deltas.head_ffg_reward = 3 * base_reward * adjusted_matching_balance / active_balance;
 }
 
 fn assign_ffg_penalty(deltas: &mut Deltas, base_reward: u64) {
@@ -150,8 +148,7 @@ mod tests {
             &mut deltas,
         );
 
-        assert_eq!(68690, deltas.head_ffg_reward / 10 * 10);
-        assert_eq!(3 * base_reward / 10 * 10, deltas.head_ffg_reward / 10 * 10);
+        assert_eq!(68004, deltas.head_ffg_reward);
         assert_eq!(0, deltas.head_ffg_penalty);
     }
 

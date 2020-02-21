@@ -165,8 +165,7 @@ impl StateTotals {
             active_validators: state.get_total_active_validators(),
             matching_balance: matching_balance,
             adjusted_matching_balance: (matching_balance as f32 * state.config.probability_online)
-                .floor() as u64
-                / 1000,
+                .floor() as u64,
             max_balance: state.get_max_balance(),
             min_balance: state.get_min_balance(),
         }
