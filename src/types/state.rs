@@ -133,7 +133,12 @@ impl State {
             }
         }
 
-        proposer_indices
+        let mut proposer_bitmap = vec![0; n];
+        for index in &proposer_indices {
+            proposer_bitmap[*index as usize] = 1;
+        }
+
+        proposer_bitmap
     }
 }
 

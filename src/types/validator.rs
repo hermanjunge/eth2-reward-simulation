@@ -30,7 +30,7 @@ impl Validator {
     pub fn update_previous_epoch_activity(
         &self,
         state: &State,
-        proposer_indices: &Vec<usize>,
+        proposer_bitmap: &Vec<usize>,
         validator_index: usize,
     ) -> Validator {
         let mut rng = thread_rng();
@@ -46,7 +46,7 @@ impl Validator {
             has_matched_source: has_matched_source,
             has_matched_target: has_matched_source,
             has_matched_head: has_matched_source,
-            is_proposer: proposer_indices.contains(&validator_index),
+            is_proposer: proposer_bitmap[validator_index] == 1,
         }
     }
 
@@ -121,7 +121,7 @@ mod tests {
         cases.push(prepare_test_has_source(false, 0.0, 1.0, false));
         cases.push(prepare_test_has_source(false, 1.0, 0.0, false));
 
-        let dummy_vec = vec![];
+        let dummy_vec = vec![cases[0].state.validators.len()];
 
         for mut case in cases {
             case.validator =
@@ -134,7 +134,7 @@ mod tests {
     struct TestCaseProposer {
         state: State,
         validator: Validator,
-        proposer_indices: Vec<usize>,
+        proposer_bitmap: Vec<usize>,
         validator_index: usize,
         expected_result: bool,
     }
@@ -152,18 +152,18 @@ mod tests {
             is_proposer: false,
         };
 
-        let mut proposer_indices = vec![];
-        proposer_indices.push(4usize);
-        proposer_indices.push(8usize);
-        proposer_indices.push(15usize);
-        proposer_indices.push(16usize);
-        proposer_indices.push(23usize);
-        proposer_indices.push(42usize);
+        let mut proposer_bitmap = vec![0; state.validators.len()];
+        proposer_bitmap[4 as usize] = 1;
+        proposer_bitmap[8 as usize] = 1;
+        proposer_bitmap[15 as usize] = 1;
+        proposer_bitmap[16 as usize] = 1;
+        proposer_bitmap[23 as usize] = 1;
+        proposer_bitmap[42 as usize] = 1;
 
         TestCaseProposer {
             state: state,
             validator: validator,
-            proposer_indices: proposer_indices,
+            proposer_bitmap: proposer_bitmap,
             validator_index: validator_index,
             expected_result: expected_result,
         }
@@ -181,7 +181,7 @@ mod tests {
         for mut case in cases {
             case.validator = case.validator.update_previous_epoch_activity(
                 &case.state,
-                &case.proposer_indices,
+                &case.proposer_bitmap,
                 case.validator_index,
             );
 
