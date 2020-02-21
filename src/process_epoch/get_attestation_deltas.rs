@@ -50,11 +50,10 @@ fn assign_ffg_reward(
 ) {
     // HACK: avoid integer overflows by "shaving" both balances
     // NOTE: this issue has been reported as of 2020.02.10
-    let matching_balance_shaved =
-        (matching_balance as f32 * probability_online).floor() as u64 / 1000;
-    let active_balance_shaved = active_balance / 1000;
+    let matching_balance = (matching_balance as f32 * probability_online).floor() as u64 / 1000;
+    let active_balance = active_balance / 1000;
 
-    deltas.head_ffg_reward = 3 * base_reward * matching_balance_shaved / active_balance_shaved;
+    deltas.head_ffg_reward = 3 * base_reward * matching_balance / active_balance;
 }
 
 fn assign_ffg_penalty(deltas: &mut Deltas, base_reward: u64) {
