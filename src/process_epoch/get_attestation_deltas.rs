@@ -46,12 +46,17 @@ fn assign_ffg_reward(
     active_balance: u64,
     base_reward: u64,
 ) {
-    // HACK: avoid integer overflows by "shaving" both balances
-    // NOTE: this issue has been reported as of 2020.02.10
-    let adjusted_matching_balance = adjusted_matching_balance >> 5;
-    let active_balance = active_balance >> 5;
+    // SPEC
+    /*
+        increment = EFFECTIVE_BALANCE_INCREMENT  # Factored out from balance totals to avoid uint64 overflow
+        reward_numerator = get_base_reward(state, index) * (attesting_balance // increment)
+        rewards[index] = reward_numerator // (total_balance // increment)
+    */
 
-    deltas.head_ffg_reward = 3 * base_reward * adjusted_matching_balance / active_balance;
+    let increment = config::EFFECTIVE_BALANCE_INCREMENT;
+    let reward_numerator = base_reward * (adjusted_matching_balance / increment);
+    let reward = reward_numerator / (active_balance / increment);
+    deltas.head_ffg_reward = 3 * reward;
 }
 
 fn assign_ffg_penalty(deltas: &mut Deltas, base_reward: u64) {
